@@ -39,18 +39,28 @@ class RingBuffer(object):
     def __get_full(self):
         return self._data[self._cur:] + self._data[:self._cur]
 
+class MessageItem(object):
+    def __init__(self, str):
+        (self.is_retweeted, self.text) = str.split("|",1)
+        self.is_retweeted = self.is_retweeted == "True"
+        if (not self.is_retweeted):
+            self.color = 255
+        else:
+            self.color = 190
+
 def add_messages_to_queue(queue):
     server = redis.StrictRedis()
     sub = server.pubsub()
     sub.subscribe("twit")
     while True:
         for message in sub.listen():
-             queue.put(message['data'])
+             queue.put(MessageItem(message['data']))
 
 def setup():
     global last_time
     
-    size(fullscreen=True)
+    # size(fullscreen=True)
+    size(screen.width, 200)
     rectMode(CENTER)
     frameRate(20)
     loop()
@@ -94,15 +104,17 @@ def draw():
     
     if state > 0:
         time = (millis() - animation_start_time) / 1000.0
-        print y, y_step,
         y = lerp(y-y_step, y, time)
-        print time, y
         if time > 1:
             state = 0
     
     for item in items:
         try:
-            text(item, x, y)
+            if item is None:
+                item = MessageItem("True|Something bad happened")
+            fill(item.color)
+            text(item.text, x, y)
+            print item.color, item.text
         except UnicodeDecodeError:
             text("Unsupported Language Tweeted", x, y)
         y-= y_step
