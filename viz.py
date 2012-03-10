@@ -54,7 +54,7 @@ def setup():
     rectMode(CENTER)
     frameRate(20)
     loop()
-    textSize(32)
+    textSize(16)
     
     last_time = millis()
 
@@ -86,6 +86,11 @@ def draw():
         animation_start_time = millis()
         
     last_len = len(items)
+    
+    if state == 0:
+        frameRate(2)
+    else:
+        frameRate(20)
     
     if state > 0:
         time = (millis() - animation_start_time) / 1000.0
