@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from pyprocessing import *
 import redis
 import multiprocessing
@@ -50,7 +52,7 @@ def setup():
     
     size(fullscreen=True)
     rectMode(CENTER)
-    frameRate(30)
+    frameRate(20)
     loop()
     textSize(32)
     
