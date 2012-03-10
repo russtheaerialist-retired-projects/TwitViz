@@ -13,7 +13,12 @@ state = 0
 animation_start_time = 0
 last_dropped = None
 
-NEW_MESSAGE_TIME = 1000
+NEW_MESSAGE_TIME = float(1000)
+SECONDS_FADE = float(5000)
+RETWEET_START_COLOR = color(128,128,180)
+RETWEET_END_COLOR = color(90)
+ORIG_START_COLOR = color(255)
+ORIG_END_COLOR = color(90)
 
 class RingBuffer(object):
     def __init__(self, size):
@@ -43,10 +48,23 @@ class MessageItem(object):
     def __init__(self, str):
         (self.is_retweeted, self.text) = str.split("|",1)
         self.is_retweeted = self.is_retweeted == "True"
+        self.timestamp = 0
         if (not self.is_retweeted):
-            self.color = 255
+            self.start_color = ORIG_START_COLOR
+            self.end_color = ORIG_END_COLOR
         else:
-            self.color = 190
+            self.start_color = RETWEET_START_COLOR
+            self.end_color = RETWEET_END_COLOR
+    
+    @property
+    def color(self):
+        ts = (millis() - self.timestamp + (SECONDS_FADE/1000.0)) / SECONDS_FADE - (SECONDS_FADE/1000.0)
+        if ts < 0:
+            return self.start_color
+        if ts > 1:
+            return self.end_color
+        retval = lerpColor(self.start_color, self.end_color, ts)
+        return retval
 
 def add_messages_to_queue(queue):
     server = redis.StrictRedis()
@@ -60,7 +78,7 @@ def setup():
     global last_time
     
     # size(fullscreen=True)
-    size(screen.width, 200)
+    size(screen.width-150, 500)
     rectMode(CENTER)
     frameRate(20)
     loop()
@@ -98,9 +116,9 @@ def draw():
     last_len = len(items)
     
     if state == 0:
-        frameRate(2)
+        frameRate(15)
     else:
-        frameRate(20)
+        frameRate(30)
     
     if state > 0:
         time = (millis() - animation_start_time) / 1000.0
@@ -114,17 +132,18 @@ def draw():
                 item = MessageItem("True|Something bad happened")
             fill(item.color)
             text(item.text, x, y)
-            print item.color, item.text
         except UnicodeDecodeError:
             text("Unsupported Language Tweeted", x, y)
         y-= y_step
     if state == 2:
         pass # draw partial?
     
-    if millis() - last_time > NEW_MESSAGE_TIME:
+    if state == 0 and millis() - last_time > NEW_MESSAGE_TIME:
         try:
             new_item = queue.get_nowait()
             ring.append(new_item)
+            new_item.timestamp = millis()
+            print new_item.color, new_item.text
             last_dropped = ring.dropped_item
             if state != 1:
                 state = 2
