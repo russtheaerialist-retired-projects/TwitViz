@@ -37,7 +37,7 @@ def start_stream(conf, *tags):
     
 if __name__ == '__main__':
     conf = load_configuration("../conf.yml")
-    start_stream(conf, "pycon", "pycon2012", "#pycon", "#pycon2012")
+    start_stream(conf, "sxsw", "#sxsw")
     #data = map(lambda x: "Test %d" % x, xrange(1,10))
     #r = redis.StrictRedis()
     #while True:
